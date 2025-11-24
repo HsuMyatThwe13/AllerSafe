@@ -1,11 +1,18 @@
 
   # AllerSafe – Meal & Allergen Companion
 
+  ## Problem Statement
+  - People managing food allergies often lack a single place to record allergens, track severity, and cross-check meals before eating.
+  - Dining venues struggle to keep menu allergen data current and accessible, leaving both staff and diners guessing.
+  - Existing tools usually require a backend or manual spreadsheets, making quick pilots or offline-friendly setups difficult.
+
+  AllerSafe addresses this gap by giving diners and admins a shared, local-first workspace where allergen knowledge, meals, and feedback stay synchronized without a dedicated server.
+
   ## 1. Project Description
   - **What it does:** AllerSafe helps individuals with food allergies browse meals, track their personal allergen profile, and get tailored warnings before eating. Admins can enrich the catalog with new meals, ingredients, and allergen metadata without any external database.
   - **Why it exists:** Managing meal safety is stressful. So, AllerSafe provides a guided experience that keeps allergen knowledge close to the plate and promotes transparency between diners and providers.
   - **Who it’s for:**
-    - Everyday diners who need quick allergen insights and a place to store favorites/ratings.
+    - Everyday diners who need quick allergen insights and a place to store favorites and ratings.
     - Restaurant or canteen admins who curate menus, ingredients, and allergen lists.
   - **Key features:**
     - Dual-role onboarding (user or admin) with in-browser persistence.
