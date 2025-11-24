@@ -1,27 +1,34 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { UserDashboard } from './components/UserDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AuthPage } from './components/AuthPage';
 import { Footer } from './components/Footer';
 import { Button } from './components/ui/button';
 import { Shield, LogOut } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-}
+import { usePersistentState } from './hooks/usePersistentState';
+import { useDataContext } from './context/DataContext';
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { users } = useDataContext();
+  const [currentUserId, setCurrentUserId] = usePersistentState<string | null>(
+    'allersafe:currentUserId',
+    null,
+  );
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
+  const currentUser = users.find((user) => user.id === currentUserId) ?? null;
+
+  useEffect(() => {
+    if (currentUserId && !currentUser) {
+      setCurrentUserId(null);
+    }
+  }, [currentUserId, currentUser, setCurrentUserId]);
+
+  const handleLogin = (userId: string) => {
+    setCurrentUserId(userId);
   };
 
   const handleLogout = () => {
-    setCurrentUser(null);
+    setCurrentUserId(null);
   };
 
   if (!currentUser) {
@@ -62,7 +69,12 @@ export default function App() {
 
       <main className="container mx-auto px-4 py-8">
         {currentUser.role === 'user' ? (
-          <UserDashboard userId={currentUser.id} userName={currentUser.name} />
+          <UserDashboard
+            key={currentUser.id}
+            userId={currentUser.id}
+            userName={currentUser.name}
+            userEmail={currentUser.email}
+          />
         ) : (
           <AdminDashboard />
         )}

@@ -18,12 +18,11 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { Plus, Trash2, UtensilsCrossed, Leaf, AlertCircle } from 'lucide-react';
-import { getMockMeals, getMockIngredients, getMockAllergens, type Meal, type Ingredient, type Allergen } from '../lib/mockData';
+import type { Meal, Ingredient, Allergen } from '../lib/mockData';
+import { useDataContext } from '../context/DataContext';
 
 export function AdminDashboard() {
-  const [meals, setMeals] = useState<Meal[]>(getMockMeals());
-  const [ingredients, setIngredients] = useState<Ingredient[]>(getMockIngredients());
-  const [allergens, setAllergens] = useState<Allergen[]>(getMockAllergens());
+  const { meals, setMeals, ingredients, setIngredients, allergens, setAllergens } = useDataContext();
   const [mealToDelete, setMealToDelete] = useState<string | null>(null);
   const [ingredientToDelete, setIngredientToDelete] = useState<string | null>(null);
   const [allergenToDelete, setAllergenToDelete] = useState<string | null>(null);

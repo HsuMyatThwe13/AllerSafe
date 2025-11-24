@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,11 +11,14 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Search, AlertTriangle, Heart, User, Star, Settings, Lightbulb, Edit } from 'lucide-react';
-import { getMockMeals, getMockAllergens, type Meal, type Allergen } from '../lib/mockData';
+import type { Meal, Allergen } from '../lib/mockData';
+import { usePersistentState } from '../hooks/usePersistentState';
+import { useDataContext } from '../context/DataContext';
 
 interface UserDashboardProps {
   userId: string;
   userName: string;
+  userEmail: string;
 }
 
 interface AllergenProfile {
@@ -32,29 +35,56 @@ interface MealRating {
   mealId: string;
   rating: number;
   review: string;
-  date: Date;
+  date: string;
 }
 
-export function UserDashboard({ userId, userName }: UserDashboardProps) {
-  const [allergenProfile, setAllergenProfile] = useState<AllergenProfile[]>([]);
-  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
+interface UserProfileInfo {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export function UserDashboard({ userId, userName, userEmail }: UserDashboardProps) {
+  const { meals, allergens, setUsers } = useDataContext();
+  const userStorageKey = (segment: string) => `allersafe:user:${userId}:${segment}`;
+
+  const [profileInfo, setProfileInfo] = usePersistentState<UserProfileInfo>(
+    userStorageKey('profile'),
+    () => ({ name: userName, email: userEmail, phone: '' }),
+  );
+  const [allergenProfile, setAllergenProfile] = usePersistentState<AllergenProfile[]>(
+    userStorageKey('allergens'),
+    [],
+  );
+  const [dietaryPreferences, setDietaryPreferences] = usePersistentState<string[]>(
+    userStorageKey('dietary'),
+    [],
+  );
+  const [favorites, setFavorites] = usePersistentState<string[]>(userStorageKey('favorites'), []);
+  const [ratings, setRatings] = usePersistentState<MealRating[]>(userStorageKey('ratings'), []);
   const [searchQuery, setSearchQuery] = useState('');
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [ratings, setRatings] = useState<MealRating[]>([]);
   const [showRatingForm, setShowRatingForm] = useState<string | null>(null);
   const [newRating, setNewRating] = useState(5);
   const [newReview, setNewReview] = useState('');
   
   // Profile editing
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editName, setEditName] = useState(userName);
-  const [editEmail, setEditEmail] = useState('user@allersafe.com');
-  const [editPhone, setEditPhone] = useState('');
+  const [editProfile, setEditProfile] = useState<UserProfileInfo>(profileInfo);
   const [tempAllergenProfile, setTempAllergenProfile] = useState<AllergenProfile[]>([]);
   const [tempDietaryPreferences, setTempDietaryPreferences] = useState<string[]>([]);
 
-  const allergens = getMockAllergens();
-  const meals = getMockMeals();
+  useEffect(() => {
+    setProfileInfo((prev) => {
+      if (prev.name === userName && prev.email === userEmail) {
+        return prev;
+      }
+      return { ...prev, name: userName, email: userEmail };
+    });
+  }, [userName, userEmail, setProfileInfo]);
+
+  useEffect(() => {
+    setEditProfile(profileInfo);
+  }, [profileInfo, setEditProfile]);
 
   const dietaryPreferenceOptions: DietaryPreference[] = [
     { id: 'vegetarian', name: 'Vegetarian' },
@@ -94,14 +124,23 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
   };
 
   const openEditProfile = () => {
+    setEditProfile(profileInfo);
     setTempAllergenProfile([...allergenProfile]);
     setTempDietaryPreferences([...dietaryPreferences]);
     setIsEditingProfile(true);
   };
 
   const saveProfileChanges = () => {
+    setProfileInfo(editProfile);
     setAllergenProfile(tempAllergenProfile);
     setDietaryPreferences(tempDietaryPreferences);
+    setUsers(prev =>
+      prev.map(user =>
+        user.id === userId
+          ? { ...user, name: editProfile.name, email: editProfile.email, phone: editProfile.phone }
+          : user,
+      ),
+    );
     setIsEditingProfile(false);
   };
 
@@ -134,7 +173,7 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
       mealId,
       rating: newRating,
       review: newReview,
-      date: new Date(),
+      date: new Date().toISOString(),
     };
     setRatings(prev => [...prev.filter(r => r.mealId !== mealId), rating]);
     setShowRatingForm(null);
@@ -424,16 +463,16 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-gray-500">Name</p>
-                <p className="text-gray-900">{editName}</p>
+                <p className="text-gray-900">{profileInfo.name}</p>
               </div>
               <div>
                 <p className="text-gray-500">Email</p>
-                <p className="text-gray-900">{editEmail}</p>
+                <p className="text-gray-900">{profileInfo.email}</p>
               </div>
-              {editPhone && (
+              {profileInfo.phone && (
                 <div>
                   <p className="text-gray-500">Phone</p>
-                  <p className="text-gray-900">{editPhone}</p>
+                  <p className="text-gray-900">{profileInfo.phone}</p>
                 </div>
               )}
             </div>
@@ -514,8 +553,13 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
                 <Label htmlFor="edit-name">Full Name</Label>
                 <Input
                   id="edit-name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
+                  value={editProfile.name}
+                  onChange={(e) =>
+                    setEditProfile(prev => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
@@ -523,8 +567,13 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
                 <Input
                   id="edit-email"
                   type="email"
-                  value={editEmail}
-                  onChange={(e) => setEditEmail(e.target.value)}
+                  value={editProfile.email}
+                  onChange={(e) =>
+                    setEditProfile(prev => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div>
@@ -532,8 +581,13 @@ export function UserDashboard({ userId, userName }: UserDashboardProps) {
                 <Input
                   id="edit-phone"
                   type="tel"
-                  value={editPhone}
-                  onChange={(e) => setEditPhone(e.target.value)}
+                  value={editProfile.phone}
+                  onChange={(e) =>
+                    setEditProfile(prev => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
                   placeholder="+1 (234) 567-8900"
                 />
               </div>

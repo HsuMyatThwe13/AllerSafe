@@ -1,23 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Shield, User, Lock, Mail, UserCircle } from 'lucide-react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-}
+import { useDataContext } from '../context/DataContext';
+import type { StoredUser } from '../types/user';
 
 interface AuthPageProps {
-  onLogin: (user: User) => void;
+  onLogin: (userId: string) => void;
 }
 
 export function AuthPage({ onLogin }: AuthPageProps) {
+  const { users, setUsers } = useDataContext();
   const [selectedRole, setSelectedRole] = useState<'user' | 'admin' | null>(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -25,31 +21,62 @@ export function AuthPage({ onLogin }: AuthPageProps) {
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAuthError(null);
+  }, [selectedRole]);
+
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRole) return;
-    
-    const user: User = {
-      id: `user-${Date.now()}`,
-      name: loginEmail.split('@')[0],
-      email: loginEmail,
-      role: selectedRole,
-    };
-    onLogin(user);
+    if (!selectedRole) {
+      setAuthError('Please select a role to continue.');
+      return;
+    }
+
+    const existingUser = users.find(
+      (user) => normalizeEmail(user.email) === normalizeEmail(loginEmail) && user.role === selectedRole,
+    );
+
+    if (!existingUser || existingUser.password !== loginPassword) {
+      setAuthError('Invalid email or password.');
+      return;
+    }
+
+    setAuthError(null);
+    onLogin(existingUser.id);
   };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedRole) return;
-    
-    const user: User = {
+    if (!selectedRole) {
+      setAuthError('Please select a role to continue.');
+      return;
+    }
+
+    const emailExists = users.some(
+      (user) => normalizeEmail(user.email) === normalizeEmail(signupEmail),
+    );
+
+    if (emailExists) {
+      setAuthError('An account with this email already exists.');
+      return;
+    }
+
+    const newUser: StoredUser = {
       id: `user-${Date.now()}`,
-      name: signupName,
-      email: signupEmail,
+      name: signupName.trim(),
+      email: signupEmail.trim(),
+      password: signupPassword,
       role: selectedRole,
+      phone: '',
     };
-    onLogin(user);
+
+    setUsers((prev) => [newUser, ...prev]);
+    setAuthError(null);
+    onLogin(newUser.id);
   };
 
   // Role selection screen
@@ -278,6 +305,9 @@ export function AuthPage({ onLogin }: AuthPageProps) {
               </form>
             </TabsContent>
           </Tabs>
+          {authError && (
+            <p className="text-sm text-red-600 mt-4 text-center">{authError}</p>
+          )}
         </Card>
 
         <p className="text-center text-sm text-gray-500 mt-6">
