@@ -3,7 +3,7 @@
 
   ## 1. Project Description
   - **What it does:** AllerSafe helps individuals with food allergies browse meals, track their personal allergen profile, and get tailored warnings before eating. Admins can enrich the catalog with new meals, ingredients, and allergen metadata without any external database.
-  - **Why it exists:** Managing meal safety is stressful—AllerSafe provides a guided experience that keeps allergen knowledge close to the plate and promotes transparency between diners and providers.
+  - **Why it exists:** Managing meal safety is stressful. So, AllerSafe provides a guided experience that keeps allergen knowledge close to the plate and promotes transparency between diners and providers.
   - **Who it’s for:**
     - Everyday diners who need quick allergen insights and a place to store favorites/ratings.
     - Restaurant or canteen admins who curate menus, ingredients, and allergen lists.
@@ -47,13 +47,12 @@
   1. Start the dev server (`npm run dev`) and open the printed URL.
   2. Pick a role on the welcome screen:
     - **Regular User:** Sign up with any email/password to create a personal profile. Favorites, allergen settings, ratings, and dietary preferences persist per user.
-    - **Administrator:** Either sign up as an admin or log in with the seeded account `admin@allersafe.com` / `admin123` to manage meals.
+    - **Administrator:** Either sign up as an admin or log in with the created account.
   3. Explore the dashboards:
     - Users can search meals, view allergen warnings, save favorites, rate dishes, and edit their allergen profile.
     - Admins can create meals by combining stored ingredients, add new ingredients/allergens, and delete outdated entries. All changes reflect immediately for every user because the data layer is shared via `localStorage`.
   4. Refresh the page—the data remains because everything is cached locally. To reset, clear your browser’s storage for the site.
 
-  > _Tip:_ Add screenshots or screen recordings to this section (e.g., place images under `docs/` and link them with standard Markdown syntax) to showcase both dashboards.
 
   ### Example Commands
   ```bash
