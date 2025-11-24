@@ -1,6 +1,6 @@
 
   {
-      "name": "Allergen Checker App",
+      "name": "allersafe",
       "version": "0.1.0",
       "private": true,
       "dependencies": {
